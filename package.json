@@ -11,8 +11,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:cpp",
-        "onLanguage:c"
+        "onCommand:extension.addSemicolon"
     ],
     "main": "./extension",
     "contributes": {

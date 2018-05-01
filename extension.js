@@ -3,6 +3,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
+
+const utils = require("./src/utils");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
@@ -127,16 +129,20 @@ function normal_enter() {
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
-    } else {
-        let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
-        editor.edit((builder) => {
-            // vscode.window.showInformationMessage(String(left_bracket_pos));
-            builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + ' '.repeat(first_char));
-            builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + ' '.repeat(first_char) + '\n' + ' '.repeat(first_char));
-            vscode.commands.executeCommand('cursorLineStart');
-        }).then(() => {
-            editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
-        });
+    } else { // is a function 
+        if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character)) {
+            let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
+            editor.edit((builder) => {
+                // vscode.window.showInformationMessage(String(left_bracket_pos));
+                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + ' '.repeat(first_char));
+                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + ' '.repeat(first_char) + '\n' + ' '.repeat(first_char));
+                vscode.commands.executeCommand('cursorLineStart');
+            }).then(() => {
+                editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
+            });
+        }else{
+            vscode.commands.executeCommand('editor.action.insertLineAfter');
+        }
     }
 }
 
@@ -170,6 +176,10 @@ function all_is_whitespace_until_cursor_position(line, position) {
     }
     return result;
 }
+
+
+
+
 // this method is called when your extension is deactivated
 function deactivate() {}
 exports.deactivate = deactivate;

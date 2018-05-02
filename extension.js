@@ -5,6 +5,7 @@
 const vscode = require("vscode");
 
 const utils = require("./src/utils");
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
@@ -26,10 +27,8 @@ class special_enter {
     _is_class_def(line) {
         return line.trim().startsWith("class ");
     }
-    _normal_enter() {
-        normal_enter();
-    }
-    add_semicolon() {
+   
+    add_semicolon() { //actually the main function
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
             return;
@@ -43,7 +42,7 @@ class special_enter {
         let cur_line_length = cur_line_obj.text.length;
         let brackets_index = util._find_curly_braces(cur_line_obj.text);
         if (!brackets_index) {
-            this._normal_enter();
+            normal_enter();
             return;
         }
         let left_bracket_index = brackets_index[0];
@@ -53,12 +52,13 @@ class special_enter {
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
         if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text)) {
             let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
+            let blankspace = ' '.repeat(first_char);
             //add semicolon
             vscode.commands.executeCommand("acceptSelectedSuggestion")
                 .then(() => {
                     editor.edit((builder) => {
-                        builder.insert(left_bracket_pos, '\n' + ' '.repeat(first_char));
-                        builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + ' '.repeat(first_char) + '\n' + ' '.repeat(first_char));
+                        builder.insert(left_bracket_pos, '\n' + blankspace);
+                        builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
                         builder.insert(right_bracket_pos, ';');
                         vscode.commands.executeCommand("cursorLineStart");
                     }).then(() => {
@@ -66,11 +66,13 @@ class special_enter {
                     });
                 });
         } else {
-            this._normal_enter();
+            normal_enter();
             return;
         }
     }
 };
+
+
 class util {
     static _find_curly_braces(line) {
         if (line.length === 0) {
@@ -107,7 +109,7 @@ function moveSelectionRight(selection, shift) {
     return new vscode.Selection(newPosition, newPosition);
 }
 
-function normal_enter() {
+function normal_enter() { // consider if is a function
     let editor = vscode.window.activeTextEditor;
     let selection = editor.selection;
     if (!selection.isEmpty) {
@@ -119,28 +121,34 @@ function normal_enter() {
     let first_left_bracket_pos = left_bracket_pos[0];
     let last_left_bracket_pos = left_bracket_pos[1];
     let is_function = left_bracket_pos[2];
+    let cursor_position = selection.start.character; //test if current cursor is in '{}'
+
+    let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
+    let blank_space = ' '.repeat(first_char);
     if (last_left_bracket_pos === -1 || is_function === 0) {
-        let cursor_position = selection.start.character;
         if (all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
             editor.edit((builder) => {
                 builder.insert(new vscode.Position(cur_line_index, 0), '\n');
+            });
+        } else if (utils.not_in_curly_braces(cur_line_obj.text)) {
+            editor.edit((builder) => {
+                builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
             });
         } else {
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
-    } else { // is a function 
+    } else if (is_function === 1) { // is a function 
         if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character)) {
-            let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
             editor.edit((builder) => {
                 // vscode.window.showInformationMessage(String(left_bracket_pos));
-                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + ' '.repeat(first_char));
-                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + ' '.repeat(first_char) + '\n' + ' '.repeat(first_char));
+                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
+                builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
                 vscode.commands.executeCommand('cursorLineStart');
             }).then(() => {
                 editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
             });
-        }else{
+        } else {
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
     }
@@ -151,14 +159,16 @@ function has_left_bracket(line) {
     let first_position = -1;
     let is_function = 0;
     let function_stack = ['}', ')'];
-    for (let i = 0; i < line.length; ++i) {
-        if (line[i] === '(' || line[i] === '{' || line[i] === '[') {
+    const line_length = line.length;
+    for (let i = 0; i < line_length; ++i) {
+        let temp = line[i];
+        if (temp === '(' || temp === '{' || temp === '[') {
             if (first_position === -1) {
                 first_position = i;
             }
             last_position = i;
         }
-        if (function_stack.length !== 0 && function_stack[function_stack.length - 1] === line[i]) {
+        if (function_stack.length !== 0 && function_stack[function_stack.length - 1] === temp) {
             function_stack.pop();
         }
     }

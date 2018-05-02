@@ -28,6 +28,14 @@ class special_enter {
         return line.trim().startsWith("class ");
     }
 
+    _is_union_def(line) {
+        return line.trim().startsWith("union ");
+    }
+
+    _is_enum_def(line) {
+        return line.trim().startsWith("enum ");
+    }
+
     add_semicolon() { //actually the main function
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -50,7 +58,8 @@ class special_enter {
         // let start_of_line = vscode.commands.executeCommand('cursorLineStart');
         let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
-        if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text)) {
+        if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text) 
+            || this._is_enum_def(cur_line_obj.text) || this._is_union_def(cur_line_obj.text)) {
             let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
             let blankspace = ' '.repeat(first_char);
             //add semicolon

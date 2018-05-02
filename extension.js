@@ -27,7 +27,7 @@ class special_enter {
     _is_class_def(line) {
         return line.trim().startsWith("class ");
     }
-   
+
     add_semicolon() { //actually the main function
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -51,7 +51,7 @@ class special_enter {
         let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
         if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text)) {
-            let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
+            let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
             let blankspace = ' '.repeat(first_char);
             //add semicolon
             vscode.commands.executeCommand("acceptSelectedSuggestion")
@@ -85,17 +85,6 @@ class util {
         }
         return [first, second];
     }
-    static get_nonWhitespace_position(line) {
-        let pos = 0;
-        let white = /\s/;
-        for (let c of line) {
-            if (white.test(c)) {
-                pos++;
-            } else {
-                return pos;
-            }
-        }
-    }
 }
 
 function moveSelectionDown2Line(selection, shift) {
@@ -123,10 +112,12 @@ function normal_enter() { // consider if is a function
     let is_function = left_bracket_pos[2];
     let cursor_position = selection.start.character; //test if current cursor is in '{}'
 
-    let first_char = util.get_nonWhitespace_position(cur_line_obj.text);
+    let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
     let blank_space = ' '.repeat(first_char);
     if (last_left_bracket_pos === -1 || is_function === 0) {
-        if (all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
+        utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
+
+        if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
             editor.edit((builder) => {
                 builder.insert(new vscode.Position(cur_line_index, 0), '\n');
             });
@@ -135,6 +126,7 @@ function normal_enter() { // consider if is a function
                 builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
             });
         } else {
+
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
@@ -149,6 +141,7 @@ function normal_enter() { // consider if is a function
                 editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
             });
         } else {
+
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
     }
@@ -176,16 +169,7 @@ function has_left_bracket(line) {
     return [first_position, last_position, is_function];
 }
 
-function all_is_whitespace_until_cursor_position(line, position) {
-    let result = true;
-    for (let i = 0; i < position; ++i) {
-        if (/\s/.test(line[i]))
-            continue;
-        else
-            return false;
-    }
-    return result;
-}
+
 
 
 

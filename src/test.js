@@ -8,4 +8,14 @@ exports.t2 = function()
     t1();
 }
 
-exports.t2();
+const func = function(a)
+{
+    const inner_func = function()
+    {
+        console.log(++a);
+    }
+    inner_func();
+    return a;
+}
+
+console.log(func(10));

@@ -119,3 +119,39 @@ exports.private_public_align = function (editor, selection, cursor_pos, cur_line
     }
 
 }
+
+exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_line_pos, cur_line_obj) {
+    const line_content = cur_line_obj.text;
+    const whitespace = /\s/;
+    let number_of_begin_whitespace = 0;
+    let condition_satisfied = false;
+    /* 
+        the function check if the line only contains '{'.
+        find '{' position and if condition_satisfied.
+    */
+    (function () {
+        for (let i = 0; i < line_content.length; i++) {
+            if (whitespace.test(line_content[i])) {
+                number_of_begin_whitespace++;
+                continue;
+            }
+            if (condition_satisfied === false && line_content[i] === '{') {
+                condition_satisfied = true;
+                continue;
+            }
+            condition_satisfied = false;
+        }
+    })();
+
+    condition_satisfied = condition_satisfied && (number_of_begin_whitespace < cursor_pos);
+    if (!condition_satisfied) {
+        return;
+    }
+
+    editor.edit((builder) => {
+        // vscode.window.showInformationMessage(String(cursor_pos));
+        builder.insert(new vscode.Position(cur_line_pos, cursor_pos), '\n' + ' '.repeat(number_of_begin_whitespace + 4));
+    });
+
+}
+

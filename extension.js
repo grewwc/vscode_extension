@@ -125,17 +125,16 @@ function normal_enter() { // consider if is a function
     let blank_space = ' '.repeat(first_char);
     if (last_left_bracket_pos === -1 || is_function === 0) {
         utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
-
+        utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
         if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
             editor.edit((builder) => {
                 builder.insert(new vscode.Position(cur_line_index, 0), '\n');
             });
-        } else if (utils.not_in_curly_braces(cur_line_obj.text)) {
+        } else if (utils.not_in_curly_braces(cur_line_obj.text)) {      //cursor is not in curly brackets
             editor.edit((builder) => {
                 builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
             });
         } else {
-
             vscode.commands.executeCommand('editor.action.insertLineAfter');
         }
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));

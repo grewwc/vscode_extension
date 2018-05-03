@@ -156,6 +156,6 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
 
 }
 
-function print(text) {
+exports.print = function(text) {
     vscode.window.showInformationMessage(text);
 }

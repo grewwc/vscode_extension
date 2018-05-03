@@ -71,7 +71,7 @@ class special_enter {
                         builder.insert(right_bracket_pos, ';');
                         vscode.commands.executeCommand("cursorLineStart");
                     }).then(() => {
-                        editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
+                        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
                     });
                 });
         } else {
@@ -96,17 +96,12 @@ class util {
     }
 }
 
-function moveSelectionDown2Line(selection, shift) {
-    let newPosition = selection.active.translate(2, shift);
+function moveSelectionDownNLine(selection, shift, N) {
+    let newPosition = selection.active.translate(N, shift);
     let newSelection = new vscode.Selection(newPosition, newPosition);
     return newSelection;
 }
 
-function moveSelectionDown1Line(selection, shift) {
-    let newPosition = selection.active.translate(1, shift);
-    let newSelection = new vscode.Selection(newPosition, newPosition);
-    return newSelection;
-}
 
 function moveSelectionRight(selection, shift) {
     let newPosition = selection.active.translate(0, shift);
@@ -114,6 +109,11 @@ function moveSelectionRight(selection, shift) {
 }
 
 function normal_enter() { // consider if is a function
+
+    const _is_else_def = function (line) {
+        return /else /.test(line) || /else{/.test(line);
+    }
+
     let editor = vscode.window.activeTextEditor;
     let selection = editor.selection;
     if (!selection.isEmpty) {
@@ -141,14 +141,21 @@ function normal_enter() { // consider if is a function
                 builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
             });
         } else {
+            let is_else_def = _is_else_def(cur_line_obj.text);
             // vscode.commands.executeCommand('editor.action.insertLineAfter');
             editor.edit((builder) => {
+                    // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
+                    // utils.print(String(char_pos) + " " + last_left_bracket_pos);
+                    if (is_else_def) {
+                        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
+                    }
                     builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space + ' '.repeat(4));
                     builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space);
                     vscode.commands.executeCommand('cursorLineStart');
                 })
                 .then(() => {
-                    editor.selection = moveSelectionDown1Line(editor.selection, 4 + first_char);
+                    let num_of_line_down = is_else_def ? 2 : 1;
+                    editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
                 });
         }
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
@@ -160,7 +167,7 @@ function normal_enter() { // consider if is a function
                 builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
                 vscode.commands.executeCommand('cursorLineStart');
             }).then(() => {
-                editor.selection = moveSelectionDown2Line(editor.selection, 4 + first_char);
+                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, N);
             });
         } else {
 

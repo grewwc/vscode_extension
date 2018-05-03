@@ -111,7 +111,20 @@ function moveSelectionRight(selection, shift) {
 function normal_enter() { // consider if is a function
 
     const _is_else_def = function (line) {
-        return /else /.test(line) || /else{/.test(line);
+        let condition1 = line.indexOf("else ");
+        let condition2 = line.indexOf("else{");
+        let else_pos = condition1 > condition2 ? condition1 : condition2;
+        let i = else_pos;
+        while (i >= 0) {
+            if (line[i--] === '}') {
+                break;
+            }
+        }
+        if (i === -1) {
+            return else_pos;
+        } else {
+            return i + 1;
+        }
     }
 
     let editor = vscode.window.activeTextEditor;
@@ -141,12 +154,13 @@ function normal_enter() { // consider if is a function
                 builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
             });
         } else {
-            let is_else_def = _is_else_def(cur_line_obj.text);
+            let else_def_pos = _is_else_def(cur_line_obj.text);
             // vscode.commands.executeCommand('editor.action.insertLineAfter');
             editor.edit((builder) => {
                     // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
                     // utils.print(String(char_pos) + " " + last_left_bracket_pos);
-                    if (is_else_def) {
+                    if (else_def_pos !== -1) {
+                        builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos));
                         builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
                     }
                     builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space + ' '.repeat(4));
@@ -154,7 +168,7 @@ function normal_enter() { // consider if is a function
                     vscode.commands.executeCommand('cursorLineStart');
                 })
                 .then(() => {
-                    let num_of_line_down = is_else_def ? 2 : 1;
+                    let num_of_line_down = else_def_pos !== -1 ? 3 : 1;
                     editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
                 });
         }

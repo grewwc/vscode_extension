@@ -14,7 +14,4 @@ const func = function (a) {
     return a;
 }
 
-console.log(/else /.test("     else {}"))
-
-let a = 20 > 10 ? 20 : 10;
-console.log(a);
+console.log("good night".indexOf("night "));

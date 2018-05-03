@@ -31,7 +31,7 @@ exports.not_in_curly_braces = function (line, cursor_position) {
         }
     }
 
-    for (let i = cursor_position + 1; i < line.length; ++i) {
+    for (let i = cursor_position; i < line.length; ++i) {
         while (i < line.length && whitespace.test(line[i])) {
             ++i;
         }
@@ -40,7 +40,6 @@ exports.not_in_curly_braces = function (line, cursor_position) {
             break;
         }
     }
-
     return !(has_left && has_right);
 };
 
@@ -131,7 +130,7 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
     */
     (function () {
         for (let i = 0; i < line_content.length; i++) {
-            if (whitespace.test(line_content[i])) {
+            if (!condition_satisfied && whitespace.test(line_content[i])) {
                 number_of_begin_whitespace++;
                 continue;
             }
@@ -139,7 +138,9 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
                 condition_satisfied = true;
                 continue;
             }
-            condition_satisfied = false;
+            if (condition_satisfied && !whitespace.test(line_content[i])) {
+                condition_satisfied = false;
+            }
         }
     })();
 
@@ -155,3 +156,6 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
 
 }
 
+function print(text) {
+    vscode.window.showInformationMessage(text);
+}

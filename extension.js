@@ -142,7 +142,8 @@ function normal_enter() { // consider if is a function
 
     let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
     let blank_space = ' '.repeat(first_char);
-    if (last_left_bracket_pos === -1 || is_function === 0) {
+
+    function normal_enter_not_function() {
         utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
         utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
         if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
@@ -172,20 +173,26 @@ function normal_enter() { // consider if is a function
                     editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
                 });
         }
+    }
+
+    
+    if (last_left_bracket_pos === -1 || is_function === 0) {
+        normal_enter_not_function();
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
     } else if (is_function === 1) { // is a function 
-        if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character)) {
+        if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character) &&
+            !utils.not_in_curly_braces(cur_line_obj.text, cursor_position)) {
             editor.edit((builder) => {
                 // vscode.window.showInformationMessage(String(left_bracket_pos));
                 builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
                 builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
                 vscode.commands.executeCommand('cursorLineStart');
             }).then(() => {
-                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, N);
+                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
             });
         } else {
-
-            vscode.commands.executeCommand('editor.action.insertLineAfter');
+            // vscode.commands.executeCommand('editor.action.insertLineAfter');
+            normal_enter_not_function();
         }
     }
 }

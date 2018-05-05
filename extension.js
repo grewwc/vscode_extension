@@ -21,19 +21,47 @@ function activate(context) {
 
 exports.activate = activate;
 class special_enter {
-    _is_struct_def(line) {
-        return line.trim().startsWith("struct ");
+
+    _is_struct_def() {
+        return this.line_obj.trim().startsWith("struct ");
     }
-    _is_class_def(line) {
-        return line.trim().startsWith("class ");
+    _is_class_def() {
+        return this.line_obj.trim().startsWith("class ");
     }
 
-    _is_union_def(line) {
-        return line.trim().startsWith("union ");
+    _is_union_def() {
+        return this.line_obj.trim().startsWith("union ");
     }
 
-    _is_enum_def(line) {
-        return line.trim().startsWith("enum ");
+    _is_enum_def() {
+        return this.line_obj.trim().startsWith("enum ");
+    }
+
+    _is_try_def() {
+        let try_pos = this.line_obj.indexOf("try");
+        const p = /\s/;
+        if (try_pos === -1) {
+            return false;
+        }
+        for (let i = try_pos + 3; i < this.line_obj.length; ++i) {
+            while (p.test(this.line_obj[i])) {
+                continue;
+            }
+            if (this.line_obj[i] === '{') {
+                return !utils.not_in_curly_braces(this.line_obj, this.cursor_position);
+            }
+        }
+        return false;
+    }
+
+
+    condition_register(condition_funcs) {
+        let res = false;
+
+        for (let func of condition_funcs) {
+            res = res || func.apply(this);
+        }
+        return res;
     }
 
     add_semicolon() { //actually the main function
@@ -58,10 +86,14 @@ class special_enter {
         let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
 
-
-        if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text) ||
-            this._is_enum_def(cur_line_obj.text) || this._is_union_def(cur_line_obj.text)) {
-            let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
+        this.line_obj = cur_line_obj.text;
+        this.cursor_position = selection.start.character;
+        // if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text) ||
+        //     this._is_enum_def(cur_line_obj.text) || this._is_union_def(cur_line_obj.text) ) {
+        if (this.condition_register([this._is_struct_def, this._is_class_def,
+                this._is_enum_def, this._is_union_def, this._is_try_def
+            ])) {
+            let first_char = utils.get_nonWhitespace_position(this.line_obj);
             let blankspace = ' '.repeat(first_char);
             /* 
                 add semicolon
@@ -71,7 +103,9 @@ class special_enter {
                     editor.edit((builder) => {
                         builder.insert(left_bracket_pos, '\n' + blankspace);
                         builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
-                        builder.insert(right_bracket_pos, ';');
+                        if (!this._is_try_def()) {
+                            builder.insert(right_bracket_pos, ';');
+                        }
                         vscode.commands.executeCommand("cursorLineStart");
                     }).then(() => {
                         editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);

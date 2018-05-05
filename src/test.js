@@ -1,17 +1,17 @@
-let t1 = function () {
-    console.log("here");
-}
+class what {
+    test() {
 
-exports.t2 = function () {
-    t1();
-}
-
-const func = function (a) {
-    const inner_func = function () {
-        console.log(++a);
+        console.log("here");
     }
-    inner_func();
-    return a;
+};
+
+
+function t() {
+    return true;
 }
 
-console.log("\\");
+let a = true;
+let b = false;
+
+let w = new what();
+w.test();

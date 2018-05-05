@@ -14,4 +14,4 @@ const func = function (a) {
     return a;
 }
 
-console.log("good night".indexOf("night "));
+console.log("\\");

@@ -3,9 +3,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
-
+const begin_end = require('./src/latex/begin_end');
 const utils = require("./src/utils");
-
+// const move_cursor = require("./src/move_cursor"); 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
@@ -55,14 +55,17 @@ class special_enter {
         }
         let left_bracket_index = brackets_index[0];
         let right_bracket_index = brackets_index[1];
-        // let start_of_line = vscode.commands.executeCommand('cursorLineStart');
         let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
+
+
         if (this._is_struct_def(cur_line_obj.text) || this._is_class_def(cur_line_obj.text) ||
             this._is_enum_def(cur_line_obj.text) || this._is_union_def(cur_line_obj.text)) {
             let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
             let blankspace = ' '.repeat(first_char);
-            //add semicolon
+            /* 
+                add semicolon
+            */
             vscode.commands.executeCommand("acceptSelectedSuggestion")
                 .then(() => {
                     editor.edit((builder) => {
@@ -96,20 +99,9 @@ class util {
     }
 }
 
-function moveSelectionDownNLine(selection, shift, N) {
-    let newPosition = selection.active.translate(N, shift);
-    let newSelection = new vscode.Selection(newPosition, newPosition);
-    return newSelection;
-}
 
-
-function moveSelectionRight(selection, shift) {
-    let newPosition = selection.active.translate(0, shift);
-    return new vscode.Selection(newPosition, newPosition);
-}
 
 function normal_enter() { // consider if is a function
-
     const _is_else_def = function (line) {
         let condition1 = line.indexOf("else ");
         let condition2 = line.indexOf("else{");
@@ -127,6 +119,7 @@ function normal_enter() { // consider if is a function
         }
     }
 
+    const langId = vscode.window.activeTextEditor.document.languageId;
     let editor = vscode.window.activeTextEditor;
     let selection = editor.selection;
     if (!selection.isEmpty) {
@@ -144,38 +137,46 @@ function normal_enter() { // consider if is a function
     let blank_space = ' '.repeat(first_char);
 
     function normal_enter_not_function() {
-        utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
-        utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
-        if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
-            editor.edit((builder) => {
-                builder.insert(new vscode.Position(cur_line_index, 0), '\n');
-            });
-        } else if (utils.not_in_curly_braces(cur_line_obj.text, cursor_position)) { //cursor is not in curly brackets            
-            editor.edit((builder) => {
-                builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
-            });
-        } else {
-            let else_def_pos = _is_else_def(cur_line_obj.text);
-            // vscode.commands.executeCommand('editor.action.insertLineAfter');
-            editor.edit((builder) => {
-                    // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
-                    // utils.print(String(char_pos) + " " + last_left_bracket_pos);
-                    if (else_def_pos !== -1) {
-                        builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos));
-                        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
-                    }
-                    builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space + ' '.repeat(4));
-                    builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space);
-                    vscode.commands.executeCommand('cursorLineStart');
-                })
-                .then(() => {
-                    let num_of_line_down = else_def_pos !== -1 ? 3 : 1;
-                    editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
+        // Any more format function should think about adding here.
+
+        if (langId === 'latex' || langId === 'tex') //latex or tex file
+        {
+            begin_end.begin_end(editor, selection, cur_line_index, cur_line_obj, cursor_position);
+        } else if (langId === 'cpp' || langId === 'c') {
+            utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
+            utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
+
+            if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
+                editor.edit((builder) => {
+                    builder.insert(new vscode.Position(cur_line_index, 0), '\n');
                 });
+            } else if (utils.not_in_curly_braces(cur_line_obj.text, cursor_position)) { //cursor is not in curly brackets            
+                editor.edit((builder) => {
+                    builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
+                });
+            } else {
+                let else_def_pos = _is_else_def(cur_line_obj.text);
+                // vscode.commands.executeCommand('editor.action.insertLineAfter');
+                editor.edit((builder) => {
+                        // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
+                        // utils.print(String(char_pos) + " " + last_left_bracket_pos);
+                        if (else_def_pos !== -1) {
+                            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos));
+                            builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
+                        }
+                        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space + ' '.repeat(4));
+                        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + blank_space);
+                        vscode.commands.executeCommand('cursorLineStart');
+                    })
+                    .then(() => {
+                        let num_of_line_down = else_def_pos !== -1 ? 3 : 1;
+                        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
+                    });
+            }
         }
     }
 
-    
+
     if (last_left_bracket_pos === -1 || is_function === 0) {
         normal_enter_not_function();
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
@@ -196,6 +197,17 @@ function normal_enter() { // consider if is a function
         }
     }
 }
+
+const moveSelectionDownNLine = function (selection, shift, N) {
+    let newPosition = selection.active.translate(N, shift);
+    return new vscode.Selection(newPosition, newPosition);
+};
+
+
+const moveSelectionRight = function (selection, shift) {
+    let newPosition = selection.active.translate(0, shift);
+    return new vscode.Selection(newPosition, newPosition);
+};
 
 function has_left_bracket(line) {
     let last_position = -1;
@@ -218,10 +230,6 @@ function has_left_bracket(line) {
     is_function = function_stack.length === 0 ? 1 : 0;
     return [first_position, last_position, is_function];
 }
-
-
-
-
 
 
 // this method is called when your extension is deactivated

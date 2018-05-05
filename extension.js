@@ -139,13 +139,12 @@ function normal_enter() { // consider if is a function
     function normal_enter_not_function() {
         // Any more format function should think about adding here.
 
-        if (langId === 'latex' || langId === 'tex') //latex or tex file
+        if ((langId === 'latex' || langId === 'tex')) //latex or tex file
         {
             begin_end.begin_end(editor, selection, cur_line_index, cur_line_obj, cursor_position);
-        } else if (langId === 'cpp' || langId === 'c') {
+        } else {
             utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
             utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
-
             if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
                 editor.edit((builder) => {
                     builder.insert(new vscode.Position(cur_line_index, 0), '\n');

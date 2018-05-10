@@ -6,12 +6,11 @@ class what {
 };
 
 
-function t() {
-    return true;
+function t(val) {
+    console.log(a);      
+    let a = 10;
 }
 
-let a = true;
-let b = false;
 
-let w = new what();
-w.test();
+
+t(10)

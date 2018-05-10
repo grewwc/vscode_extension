@@ -1,9 +1,8 @@
 const vscode = require('vscode');
 
 exports.is_last_char = function (line, cursor_pos) {
-    let white_space = /\s/;
     for (let i = cursor_pos; i < line.length; ++i) {
-        if (white_space.test(line[i])) {
+        if (line[i] === " ") {
             continue;
         } else {
             return false;
@@ -16,13 +15,11 @@ exports.not_in_curly_braces = function (line, cursor_position) {
     if (line.length === 0) {
         return true;
     }
-
-    let whitespace = /\s/;
     let has_left = false;
     let has_right = false;
 
     for (let i = cursor_position - 1; i >= 0; --i) {
-        while (i >= 0 && whitespace.test(line[i])) {
+        while (i >= 0 && line[i] === ' ') {
             --i;
         }
         if (line[i] === '{') {
@@ -32,7 +29,7 @@ exports.not_in_curly_braces = function (line, cursor_position) {
     }
 
     for (let i = cursor_position; i < line.length; ++i) {
-        while (i < line.length && whitespace.test(line[i])) {
+        while (i < line.length && line[i] === ' ') {
             ++i;
         }
         if (line[i] === '}') {
@@ -57,9 +54,8 @@ exports.all_is_whitespace_until_cursor_position = function (line, position) {
 
 exports.get_nonWhitespace_position = function (line) {
     let pos = 0;
-    let white = /\s/;
     for (let c of line) {
-        if (white.test(c)) {
+        if (c === ' ') {
             pos++;
         } else {
             return pos;
@@ -121,7 +117,6 @@ exports.private_public_align = function (editor, selection, cursor_pos, cur_line
 
 exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_line_pos, cur_line_obj) {
     const line_content = cur_line_obj.text;
-    const whitespace = /\s/;
     let number_of_begin_whitespace = 0;
     let condition_satisfied = false;
     /* 
@@ -130,7 +125,7 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
     */
     (function () {
         for (let i = 0; i < line_content.length; i++) {
-            if (!condition_satisfied && whitespace.test(line_content[i])) {
+            if (!condition_satisfied && line_content[i] === ' ') {
                 number_of_begin_whitespace++;
                 continue;
             }
@@ -138,7 +133,7 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
                 condition_satisfied = true;
                 continue;
             }
-            if (condition_satisfied && !whitespace.test(line_content[i])) {
+            if (condition_satisfied && line_content[i] !== ' ') {
                 condition_satisfied = false;
             }
         }
@@ -153,9 +148,10 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
         // vscode.window.showInformationMessage(String(cursor_pos));
         builder.insert(new vscode.Position(cur_line_pos, cursor_pos), '\n' + ' '.repeat(number_of_begin_whitespace + 4));
     });
-
 }
 
-exports.print = function(text) {
+exports.print = function (text) {
     vscode.window.showInformationMessage(text);
 }
+
+// exports.initial_enter = true;

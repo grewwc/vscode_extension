@@ -39,6 +39,7 @@ exports.begin_end = function (editor, selection, cur_line_num, cur_line_obj, cur
             builder.insert(new vscode.Position(cur_line_num, left_curly_bracket_pos + 1), '\n' + ' '.repeat(2 + begin_index));
         });
     }
+    utils.initial_enter = false;
 }
 
 

@@ -84,10 +84,19 @@ class special_enter {
         this.cursor_position = selection.start.character;
 
         if ((langId === 'tex' || langId === 'latex')) {
-            editor.edit((builder) => {
-                const blankspace = ' '.repeat(this.line_obj.lastIndexOf(" ") + 1);
-                builder.insert(new vscode.Position(cur_line_index, this.cursor_position), `\n${blankspace}`);
-            });
+            const newPosition = new vscode.Position(cur_line_index, this.cursor_position);
+            const word_pos = utils.get_nonWhitespace_position(this.line_obj);
+            if (word_pos === this.line_obj.length) {
+                editor.edit((builder) => {
+                    const blank_space = ' '.repeat(this.cursor_position);
+                    builder.insert(newPosition, `\n${blank_space}`);
+                });
+            } else {
+                editor.edit((builder) => {
+                    const blankspace = ' '.repeat(word_pos);
+                    builder.insert(newPosition, `\n${blankspace}`);
+                });
+            }
             return;
         }
         let brackets_index = util._find_curly_braces(this.line_obj);

@@ -69,7 +69,6 @@ exports.private_public_align = function (editor, selection, cursor_pos, cur_line
 
     const lang = vscode.window.activeTextEditor.document.languageId;
     const lang_support = ["cpp"];
-    const original_selection = selection;
 
     let first_char_pos = exports.get_nonWhitespace_position(cur_line_obj.text);
     if (!lang_support.includes(lang) || !only_private_or_public()) {

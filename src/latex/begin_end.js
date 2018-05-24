@@ -7,7 +7,6 @@ const utils = require('../utils');
 /* not sure why these function cannot be put outside of the file */
 
 exports.begin_end = function (editor, selection, cur_line_num, cur_line_obj, cursor_position) {
-    // utils.print("here");
     const cur_line_text = cur_line_obj.text;
     const begin_index = cur_line_text.indexOf("\\begin");
     if (begin_index === -1) {
@@ -20,26 +19,27 @@ exports.begin_end = function (editor, selection, cur_line_num, cur_line_obj, cur
     }
 
     const content_between_curly_brackets = parse_content_in_curly_bracket(cur_line_text);
+    const newPosition = new vscode.Position(cur_line_num, left_curly_bracket_pos + 1);
+    const blank_space = ' '.repeat(begin_index);
     if (!utils.not_in_curly_braces(cur_line_text, cursor_position)) {
         editor.edit((builder) => {
-                builder.insert(new vscode.Position(cur_line_num, left_curly_bracket_pos + 1), '\n' + ' '.repeat(2 + begin_index));
-                builder.insert(new vscode.Position(cur_line_num, left_curly_bracket_pos + 1),
-                    '\n' + ' '.repeat(begin_index) + '\\end{' + content_between_curly_brackets + '}');
+                // builder.insert(newPosition, '\n' + ' '.repeat(2 + begin_index));
+                builder.insert(newPosition, `\n  ${blank_space}`);
+                // builder.insert(newPosition,
+                //     '\n' + ' '.repeat(begin_index) + `\\end{${content_between_curly_brackets}}`);
+                builder.insert(newPosition, `\n${blank_space}\\end{${content_between_curly_brackets}}`)
                 vscode.commands.executeCommand("cursorLineStart");
             })
             .then(() => {
                 // utils.print(String(begin_index));
                 editor.selection = moveSelectionDownNLine(selection, 2 + begin_index, 1);
             });
-    }
-    else
-    {
-        editor.edit((builder)=>
-        {
-            builder.insert(new vscode.Position(cur_line_num, left_curly_bracket_pos + 1), '\n' + ' '.repeat(2 + begin_index));
+    } else {
+        editor.edit((builder) => {
+            // builder.insert(newPosition, '\n' + ' '.repeat(2 + begin_index));
+            builder.insert(newPosition, `\n  ${blank_space}`);
         });
     }
-    utils.initial_enter = false;
 }
 
 
@@ -65,7 +65,7 @@ const moveSelectionDownNLine = function (selection, shift, N) {
 };
 
 
-const moveSelectionRight = function (selection, shift) {
-    let newPosition = selection.active.translate(0, shift);
-    return new vscode.Selection(newPosition, newPosition);
-};
+// const moveSelectionRight = function (selection, shift) {
+//     let newPosition = selection.active.translate(0, shift);
+//     return new vscode.Selection(newPosition, newPosition);
+// };

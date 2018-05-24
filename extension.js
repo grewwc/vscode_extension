@@ -13,8 +13,8 @@ const utils = require("./src/utils");
 function activate(context) {
 
     let add_func = vscode.commands.registerCommand('extension.addSemicolon', () => {
-        let add_semicolon = new special_enter();
-        add_semicolon.add_semicolon();
+        let process_enter = new special_enter();
+        process_enter.process_enter();
     });
     context.subscriptions.push(add_func);
 }
@@ -22,6 +22,8 @@ function activate(context) {
 // let lang = vscode.window.activeTextEditor.document.languageId;
 
 exports.activate = activate;
+
+
 class special_enter {
 
     _is_struct_def() {
@@ -66,7 +68,7 @@ class special_enter {
         return res;
     }
 
-    add_semicolon() { //actually the main function
+    process_enter() { //actually the main function
         let langId = vscode.window.activeTextEditor.document.languageId;
 
         let editor = vscode.window.activeTextEditor;
@@ -92,6 +94,7 @@ class special_enter {
                     builder.insert(newPosition, `\n${blank_space}`);
                 });
             } else {
+                // begin_end.begin_end(editor, selection, cur_line_index, cur_line_obj, this.cursor_position);
                 editor.edit((builder) => {
                     const blankspace = ' '.repeat(word_pos);
                     builder.insert(newPosition, `\n${blankspace}`);
@@ -162,7 +165,11 @@ function normal_enter() { // consider if is a function
     const langId = vscode.window.activeTextEditor.document.languageId;
     const _is_else_def = function (line) {
         let condition1 = line.indexOf("else ");
-        let condition2 = line.indexOf("else{");
+        let condition2 = -1;
+        if(condition1 === -1)
+        {
+            condition2 = line.indexOf("else{");
+        }
         let else_pos = condition1 > condition2 ? condition1 : condition2;
         let i = else_pos;
         while (i >= 0) {
@@ -171,7 +178,7 @@ function normal_enter() { // consider if is a function
             }
         }
         if (i === -1) {
-            return else_pos;
+            return else_pos - 1;
         } else {
             return i + 1;
         }
@@ -184,7 +191,6 @@ function normal_enter() { // consider if is a function
     let cur_line_index = selection.active.line;
     let cur_line_obj = editor.document.lineAt(cur_line_index);
     let left_bracket_pos = has_left_bracket(cur_line_obj.text);
-    let first_left_bracket_pos = left_bracket_pos[0];
     let last_left_bracket_pos = left_bracket_pos[1];
     let is_function = left_bracket_pos[2];
     let cursor_position = selection.start.character; //test if current cursor is in '{}'
@@ -195,7 +201,7 @@ function normal_enter() { // consider if is a function
     function normal_enter_not_function() {
         // Any more format function should think about adding here.
         if (langId === 'cpp') {
-            utils.private_public_align(editor, selection, cursor_position, cur_line_index, cur_line_obj);
+            utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
         }
         utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
 
@@ -209,6 +215,7 @@ function normal_enter() { // consider if is a function
             });
         } else {
             let else_def_pos = _is_else_def(cur_line_obj.text);
+            utils.print(String(else_def_pos));
             // vscode.commands.executeCommand('editor.action.insertLineAfter');
             editor.edit((builder) => {
                     // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;

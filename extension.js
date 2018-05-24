@@ -117,26 +117,30 @@ class special_enter {
         if (this.condition_register([this._is_struct_def, this._is_class_def,
         this._is_enum_def, this._is_union_def, this._is_try_def
         ])) {
-
-            let first_char = utils.get_nonWhitespace_position(this.line_obj);
-            let blankspace = ' '.repeat(first_char);
-            /* 
-                add semicolon
-            */
-            vscode.commands.executeCommand("acceptSelectedSuggestion")
-                .then(() => {
-                    editor.edit((builder) => {
-                        builder.insert(left_bracket_pos, '\n' + blankspace);
-                        builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
-                        if (!this._is_try_def()) {
-                            builder.insert(right_bracket_pos, ';');
-                        }
-                        vscode.commands.executeCommand("cursorLineStart");
-                    }).then(() => {
-                        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
+            if (!utils.not_in_curly_braces(this.line_obj, this.cursor_position)) {
+                let first_char = utils.get_nonWhitespace_position(this.line_obj);
+                let blankspace = ' '.repeat(first_char);
+                /* 
+                    add semicolon
+                */
+                vscode.commands.executeCommand("acceptSelectedSuggestion")
+                    .then(() => {
+                        editor.edit((builder) => {
+                            builder.insert(left_bracket_pos, '\n' + blankspace);
+                            builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
+                            if (!this._is_try_def()) {
+                                builder.insert(right_bracket_pos, ';');
+                            }
+                            vscode.commands.executeCommand("cursorLineStart");
+                        }).then(() => {
+                            editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
+                        });
                     });
-                });
-
+            }
+            else {
+                normal_enter();
+                return;
+            }
         } else {
             normal_enter();
             return;

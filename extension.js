@@ -234,7 +234,7 @@ function normal_enter() { // consider if is a function
             })
                 .then(() => {
                     let num_of_line_down = else_def_pos !== -1 ? 3 : 1;
-                    if (!has_right_bracket_before) {
+                    if (!has_right_bracket_before && else_def_pos !== -1) {
                         num_of_line_down = 2;
                     }
                     editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);

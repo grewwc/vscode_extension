@@ -72,19 +72,17 @@ exports.get_nonWhitespace_position = function (line) {
 
 
 exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_line_obj) {
-
-    // const lang = vscode.window.activeTextEditor.document.languageId;
     // const lang_support = ["cpp"];
-    // if (!lang_support.includes(lang) || !only_private_or_public()) {
-    //     return;
-    // }
-    
+    if (!only_private_or_public()) {
+        return;
+    }
+
     let first_char_pos = exports.get_nonWhitespace_position(cur_line_obj.text);
     let space_should_remain = find_the_last_struct_line();
 
     let start_pos = new vscode.Position(cur_line_pos, space_should_remain);
     let end_pos = new vscode.Position(cur_line_pos, first_char_pos);
-    let pos = new vscode.Position(cur_line_pos, cursor_pos);    
+    let pos = new vscode.Position(cur_line_pos, cursor_pos);
     // vscode.window.showInformationMessage(String(space_should_remain));
 
     if (first_char_pos >= space_should_remain) {
@@ -99,10 +97,10 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
         });
     }
 
-    // function only_private_or_public() {
-    //     const temp_trim = cur_line_obj.text.trim();
-    //     return temp_trim === "private:" || temp_trim === "public:" || temp_trim === "protected:";
-    // }
+    function only_private_or_public() {
+        const temp_trim = cur_line_obj.text.trim();
+        return temp_trim === "private:" || temp_trim === "public:" || temp_trim === "protected:";
+    }
 
     function find_the_last_struct_line() {
         let first_struct_char_pos = 0;

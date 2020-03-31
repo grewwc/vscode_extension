@@ -3,9 +3,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
-const begin_end = require('./src/latex/begin_end');
+// const begin_end = require('./src/latex/begin_end');
 const utils = require("./src/utils");
-
 
 // const move_cursor = require("./src/move_cursor"); 
 // this method is called when your extension is activated
@@ -19,7 +18,6 @@ function activate(context) {
     context.subscriptions.push(add_func);
 }
 
-// let lang = vscode.window.activeTextEditor.document.languageId;
 
 exports.activate = activate;
 
@@ -69,7 +67,7 @@ class special_enter {
     }
 
     process_enter() { //actually the main function
-        let langId = vscode.window.activeTextEditor.document.languageId;
+        let lang = vscode.window.activeTextEditor.document.languageId;
 
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -79,29 +77,20 @@ class special_enter {
         if (!selection.isEmpty) {
             return;
         }
+        
+        if (lang !== 'cplusplus' && lang != 'cpp')
+        {
+            normal_enter();
+            return;
+        }
+        
+
         let cur_line_index = selection.active.line;
         let cur_line_obj = editor.document.lineAt(cur_line_index);
 
         this.line_obj = cur_line_obj.text;
         this.cursor_position = selection.start.character;
 
-        if ((langId === 'tex' || langId === 'latex')) {
-            const newPosition = new vscode.Position(cur_line_index, this.cursor_position);
-            const word_pos = utils.get_nonWhitespace_position(this.line_obj);
-            if (word_pos === this.line_obj.length) {
-                editor.edit((builder) => {
-                    const blank_space = ' '.repeat(this.cursor_position);
-                    builder.insert(newPosition, `\n${blank_space}`);
-                });
-            } else {
-                // begin_end.begin_end(editor, selection, cur_line_index, cur_line_obj, this.cursor_position);
-                editor.edit((builder) => {
-                    const blankspace = ' '.repeat(word_pos);
-                    builder.insert(newPosition, `\n${blankspace}`);
-                });
-            }
-            return;
-        }
         let brackets_index = util._find_curly_braces(this.line_obj);
 
         if (!brackets_index) {
@@ -115,7 +104,7 @@ class special_enter {
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
 
         if (this.condition_register([this._is_struct_def, this._is_class_def,
-        this._is_enum_def, this._is_union_def, this._is_try_def
+            this._is_enum_def, this._is_union_def, this._is_try_def
         ])) {
             if (!utils.not_in_curly_braces(this.line_obj, this.cursor_position)) {
                 let first_char = utils.get_nonWhitespace_position(this.line_obj);
@@ -131,10 +120,8 @@ class special_enter {
                             if (!this._is_try_def()) {
                                 builder.insert(right_bracket_pos, ';');
                             }
-                            vscode.commands.executeCommand("cursorLineStart");
-                        }).then(() => {
-                            editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
-                        });
+                        })
+                        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
                     });
             }
             else {
@@ -147,7 +134,6 @@ class special_enter {
         }
     }
 };
-
 
 class util {
     static _find_curly_braces(line) {
@@ -191,6 +177,7 @@ function normal_enter() { // consider if is a function
     if (!selection.isEmpty) {
         return;
     }
+
     let cur_line_index = selection.active.line;
     let cur_line_obj = editor.document.lineAt(cur_line_index);
     let left_bracket_pos = has_left_bracket(cur_line_obj.text);
@@ -200,15 +187,15 @@ function normal_enter() { // consider if is a function
 
     let first_char = utils.get_nonWhitespace_position(cur_line_obj.text);
     let blank_space = ' '.repeat(first_char);
-
     function normal_enter_not_function() {
         // Any more format function should think about adding here.
         if (langId === 'cpp') {
             utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
         }
+
         utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
 
-        if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the begining of a sentence
+        if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the beginning of a sentence
             editor.edit((builder) => {
                 builder.insert(new vscode.Position(cur_line_index, 0), '\n');
             });
@@ -236,17 +223,17 @@ function normal_enter() { // consider if is a function
                 builder.insert(newPos, '\n' + blank_space);
                 vscode.commands.executeCommand('cursorLineStart');
             })
-                .then(() => {
-                    let num_of_line_down = else_def_pos !== -1 ? 3 : 1;
-                    if (!has_right_bracket_before && else_def_pos !== -1) {
-                        num_of_line_down = 2;
-                    }
-                    editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
-                });
+            .then(() => {
+                let num_of_line_down = else_def_pos !== -1 ? -1 : -1;
+                if (!has_right_bracket_before && else_def_pos !== -1) {
+                    num_of_line_down = -1;
+                }
+                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
+            });
         }
     }
 
-
+    // vscode.window.showInformationMessage(last_left_bracket_pos, is_function)
     if (last_left_bracket_pos === -1 || is_function === 0) {
         normal_enter_not_function();
         // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
@@ -257,11 +244,12 @@ function normal_enter() { // consider if is a function
                 // vscode.window.showInformationMessage(String(left_bracket_pos));
                 builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
                 builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
-                vscode.commands.executeCommand('cursorLineStart');
+                // vscode.commands.executeCommand('cursorLineStart');
             }).then(() => {
-                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
+                editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, -1);
             });
         } else {
+            // utils.print("final")
             // vscode.commands.executeCommand('editor.action.insertLineAfter');
             normal_enter_not_function();
         }
@@ -272,7 +260,6 @@ const moveSelectionDownNLine = function (selection, shift, N) {
     let newPosition = selection.active.translate(N, shift);
     return new vscode.Selection(newPosition, newPosition);
 };
-
 
 const moveSelectionRight = function (selection, shift) {
     let newPosition = selection.active.translate(0, shift);

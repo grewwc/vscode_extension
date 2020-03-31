@@ -15,18 +15,21 @@
     ],
     "main": "./extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.addSemicolon",
-            "title": "Hello World"
-        }],
-        "keybindings": [{
-            "command": "extension.addSemicolon",
-            "key": "enter",
-            "mac": "enter",
-            "when": "editorTextFocus"
-        }]
+        "commands": [
+            {
+                "command": "extension.addSemicolon",
+                "title": "Hello World"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "extension.addSemicolon",
+                "key": "enter",
+                "mac": "enter",
+                "when": "editorTextFocus"
+            }
+        ]
     },
-
     "scripts": {
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./node_modules/vscode/bin/test"

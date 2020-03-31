@@ -153,8 +153,52 @@ exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_l
     });
 }
 
+
+exports.isCatchBlock = (line) => {
+    let idx = line.indexOf('catch');
+    if (idx === -1) {
+        return false;
+    }
+
+    for (let i = idx - 1; i >= 0; i--) {
+        if (line[i] == ' ' || line[i] == '(') {
+            break;
+        }
+        if (line[i] === '_' || (line[i] >= 'a' && line[i] <= 'z')
+            || (line[i] >= 'A' && line[i] <= 'Z')) {
+            return false;
+        }
+    }
+
+
+    for (let i = idx + 5; i < line.length; i++) {
+        if (line[i] == ' ' || line[i] == '(') {
+            break;
+        }
+        if (line[i] === '_' || (line[i] >= 'a' && line[i] <= 'z')
+            || (line[i] >= 'A' && line[i] <= 'Z')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
 exports.print = function (text) {
     vscode.window.showInformationMessage(text);
+}
+
+
+
+exports.findLeftParenthesesLine = function(editor, lineNo) {
+    for (let j = lineNo; j >= 0; j--) {
+        // this.print("lineNO " + lineNo + "  " + editor.document.lineAt(j));
+        if (editor.document.lineAt(j).text.includes('(')) {
+            return editor.document.lineAt(j).text;
+        }
+    }
+    return null;
 }
 
 // exports.initial_enter = true;-

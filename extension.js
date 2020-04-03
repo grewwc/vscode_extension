@@ -81,7 +81,7 @@ class special_enter {
 
         let lang = vscode.window.activeTextEditor.document.languageId;
         if (lang !== 'cpp' && lang !== 'c') {
-            normal_enter();
+            vscode.commands.executeCommand('editor.action.insertLineAfter');
             return;
         }
         let cur_line_index = selection.active.line;

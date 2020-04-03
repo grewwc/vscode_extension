@@ -115,7 +115,7 @@ class special_enter {
                         editor.edit((builder) => {
                             builder.insert(left_bracket_pos, '\n' + blankspace);
                             builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
-                            if (!this._is_try_def() || !this._is_namespace_def()) {
+                            if (!this._is_try_def() && !this._is_namespace_def()) {
                                 builder.insert(right_bracket_pos, ';');
                             }
                         })

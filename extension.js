@@ -10,16 +10,11 @@ const utils = require("./src/utils");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-
-    let lang = vscode.window.activeTextEditor.document.languageId;
-    console.log('');
-    if (lang === 'cpp' || lang === 'c') {
-        let add_func = vscode.commands.registerCommand('extension.addSemicolon', () => {
-            let process_enter = new special_enter();
-            process_enter.process_enter();
-        });
-        context.subscriptions.push(add_func);
-    }
+    let add_func = vscode.commands.registerCommand('extension.addSemicolon', () => {
+        let process_enter = new special_enter();
+        process_enter.process_enter();
+    });
+    context.subscriptions.push(add_func);
 }
 
 
@@ -44,14 +39,14 @@ class special_enter {
         return this.line_obj.includes("enum ");
     }
 
-    _is_try_def() {
-        const try_pos = this.line_obj.indexOf("try");
+    _is_try_def(name = "try") {
+        const try_pos = this.line_obj.indexOf(name);
         const length = this.line_obj.length;
         if (try_pos === -1) {
             return false;
         }
-        for (let i = try_pos + 3; i < length; ++i) {
-            while (this.line_obj[i] === ' ') {
+        for (let i = try_pos + name.length; i < length; ++i) {
+            if (this.line_obj[i] === ' ') {
                 continue;
             }
             if (this.line_obj[i] === '{') {
@@ -61,6 +56,9 @@ class special_enter {
         return false;
     }
 
+    _is_namespace_def() {
+        return this._is_try_def("namespace");
+    }
 
     condition_register(condition_funcs) {
         let res = false;
@@ -81,6 +79,11 @@ class special_enter {
             return;
         }
 
+        let lang = vscode.window.activeTextEditor.document.languageId;
+        if (lang !== 'cpp' && lang !== 'c') {
+            normal_enter();
+            return;
+        }
         let cur_line_index = selection.active.line;
         let cur_line_obj = editor.document.lineAt(cur_line_index);
 
@@ -97,10 +100,10 @@ class special_enter {
         let right_bracket_index = brackets_index[1];
         let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
         let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
-
         if (this.condition_register([this._is_struct_def, this._is_class_def,
-        this._is_enum_def, this._is_union_def, this._is_try_def
+        this._is_enum_def, this._is_union_def, this._is_try_def, this._is_namespace_def
         ])) {
+            // utils.print("here "/)
             if (!utils.not_in_curly_braces(this.line_obj, this.cursor_position)) {
                 let first_char = utils.get_nonWhitespace_position(this.line_obj);
                 let blankspace = ' '.repeat(first_char);
@@ -112,7 +115,7 @@ class special_enter {
                         editor.edit((builder) => {
                             builder.insert(left_bracket_pos, '\n' + blankspace);
                             builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
-                            if (!this._is_try_def()) {
+                            if (!this._is_try_def() || !this._is_namespace_def()) {
                                 builder.insert(right_bracket_pos, ';');
                             }
                         })
@@ -143,8 +146,6 @@ class util {
         return [first, second];
     }
 }
-
-
 
 
 function normal_enter() { // consider if is a function

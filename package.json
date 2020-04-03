@@ -18,7 +18,7 @@
         "commands": [
             {
                 "command": "extension.addSemicolon",
-                "title": "Hello World"
+                "title": "cpp_format"
             }
         ],
         "keybindings": [

@@ -81,6 +81,7 @@ class special_enter {
 
         let lang = vscode.window.activeTextEditor.document.languageId;
         if (lang !== 'cpp' && lang !== 'c') {
+            // only use the script in C/C++ files
             vscode.commands.executeCommand('editor.action.insertLineAfter');
             return;
         }
@@ -135,6 +136,8 @@ class special_enter {
 
 class util {
     static _find_curly_braces(line) {
+        // return the LEFT & RIGHT curly braces at the same time
+        // return type: [int, int] / null
         if (line.length === 0) {
             return null;
         }
@@ -149,7 +152,6 @@ class util {
 
 
 function normal_enter() { // consider if is a function
-    const langId = vscode.window.activeTextEditor.document.languageId;
     const _is_else_like = function (line, keyword) {
         let condition1 = line.indexOf(`${keyword} `);
         let condition2 = -1;
@@ -193,9 +195,7 @@ function normal_enter() { // consider if is a function
     let blank_space = ' '.repeat(first_char);
     function normal_enter_not_function() {
         // Any more format function should think about adding here.
-        if (langId === 'cpp') {
-            utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
-        }
+        utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
 
         utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
 
@@ -214,6 +214,7 @@ function normal_enter() { // consider if is a function
                 else_def_pos_pair = _is_else_like(cur_line_obj.text, 'catch');
                 else_def_pos = else_def_pos_pair[0];
             }
+            // utils.print("here " + else_def_pos);
             let has_right_bracket_before = else_def_pos_pair[1];
             let newPos = new vscode.Position(cur_line_index, last_left_bracket_pos + 1);
             // vscode.commands.executeCommand('editor.action.insertLineAfter');
@@ -293,7 +294,9 @@ function has_left_bracket(line) {
     }
 
     is_function = function_stack.length === 0 ? 1 : 0;
-    if (utils.isCatchBlock(line)) {
+
+    // else if() block should not be treated like a function
+    if (utils.isCatchBlock(line) || line.includes("else if")) {
         is_function = 0;
     }
     return [first_position, last_position, is_function];

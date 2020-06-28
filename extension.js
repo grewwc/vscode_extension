@@ -5,7 +5,6 @@
 const vscode = require("vscode");
 // const begin_end = require('./src/latex/begin_end');
 const utils = require("./src/utils");
-const { isAccessor } = require("typescript");
 
 // const move_cursor = require("./src/move_cursor"); 
 // this method is called when your extension is activated
@@ -17,13 +16,22 @@ function activate(context) {
     if (lang !== 'cpp' && lang !== 'c') {
       // only use the script in C/C++ files
       let editor = vscode.window.activeTextEditor;
+      let cursor_position = editor.selection.active.character;
       let cur_line_index = editor.selection.active.line;
-      // editor.selection = moveSelectionDownNLine(editor.selection, 4, 1);
-      editor.edit((builder) => {
-        let cursor_position = editor.selection.start.character;
-        builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n');
-        // editor.selection = moveSelectionDownNLine(editor.selection, 4, 1);
-      });
+      const text = editor.document.lineAt(cur_line_index).text;
+
+      let last_char = utils.is_last_char(text, cursor_position);
+
+      if (!last_char) {
+        editor.edit((builder) => {
+          builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n');
+        })
+        return;
+      }
+      vscode.commands.executeCommand("editor.action.insertLineAfter")
+        .then(() => {
+          return;
+        })
       return;
     }
     let process_enter = new special_enter();
@@ -36,8 +44,6 @@ function activate(context) {
 
 
 exports.activate = activate;
-
-
 
 
 class special_enter {

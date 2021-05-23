@@ -20,7 +20,7 @@
             {
                 "command": "extension.addSemicolon",
                 "title": "cpp_format",
-                "enablement": "editorLangId == 'cpp' || editorLangId == 'c'"
+                "enablement": "editorTextFocus && !findInputFocussed && editorLangId == 'cpp'"
             }
         ],
         "keybindings": [

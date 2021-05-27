@@ -74,12 +74,15 @@ exports.get_nonWhitespace_position = function (line) {
 
 exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_line_obj) {
   // const lang_support = ["cpp"];
-  if (!only_private_or_public()) {
-    return;
-  }
+  let test = only_private_or_public();
+  if (test === 0) return;
+  
+  let looking_for_switch = test === 2 ? true : false;
 
   let first_char_pos = exports.get_nonWhitespace_position(cur_line_obj.text);
-  let space_should_remain = find_the_last_struct_line();
+  let space_should_remain = find_the_last_struct_line(looking_for_switch);
+
+  // exports.print("here " + space_should_remain);
 
   let start_pos = new vscode.Position(cur_line_pos, space_should_remain);
   let end_pos = new vscode.Position(cur_line_pos, first_char_pos);
@@ -111,11 +114,19 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
     if (temp_trim.startsWith('default') && temp_trim.endsWith(':')) {
       case_keyword = true;
     }
-    let res = temp_trim === "private:" || temp_trim === "public:" || temp_trim === "protected:" || case_keyword;
-    return res;
+    let res = temp_trim === "private:" || temp_trim === "public:" || temp_trim === "protected:";
+    if (res) {
+      return 1;
+    }
+
+    if (case_keyword) {
+      return 2;
+    }
+
+    return 0;
   }
 
-  function find_the_last_struct_line() {
+  function find_the_last_struct_line(looking_for_switch = false) {
     let first_struct_char_pos = 0;
 
     for (let i = cur_line_pos; i >= 0; --i) {
@@ -124,8 +135,7 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
         && !(friend_class.test(ith_line_obj) || friend_struct.test(ith_line_obj))) {
         first_struct_char_pos = exports.get_nonWhitespace_position(ith_line_obj);
         break;
-      }
-      if (switch_.test(ith_line_obj)) {
+      } else if (looking_for_switch && switch_.test(ith_line_obj)) {
         first_struct_char_pos = exports.get_nonWhitespace_position(ith_line_obj);
         break;
       }

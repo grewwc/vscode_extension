@@ -18,6 +18,11 @@ exports.is_last_char = function (line, cursor_pos) {
   return true;
 };
 
+exports.curly_brackets_empty = function (line) {
+  const p = /\{\s*\}/g;
+  return p.test(line);
+}
+
 exports.not_in_curly_braces = function (line, cursor_position) {
   if (line.length === 0) {
     return true;
@@ -76,7 +81,7 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
   // const lang_support = ["cpp"];
   let test = only_private_or_public();
   if (test === 0) return;
-  
+
   let looking_for_switch = test === 2 ? true : false;
 
   let first_char_pos = exports.get_nonWhitespace_position(cur_line_obj.text);

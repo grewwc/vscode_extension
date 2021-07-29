@@ -93,7 +93,7 @@ class special_enter {
       normal_enter();
       return;
     }
-    
+
     let left_bracket_index = brackets_index[0];
     let right_bracket_index = brackets_index[1];
     let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
@@ -198,11 +198,12 @@ function normal_enter() { // consider if is a function
 
     if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the beginning of a sentence
       editor.edit((builder) => {
-        builder.insert(new vscode.Position(cur_line_index, 0), '\n');
+        builder.insert(new vscode.Position(cur_line_index, 0), '\n');  // move cursor down 
       });
-    } else if (utils.not_in_curly_braces(cur_line_obj.text, cursor_position)) { //cursor is not in curly brackets            
-      editor.edit((builder) => {
-        builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);
+    } else if (utils.not_in_curly_braces(cur_line_obj.text, cursor_position)
+      || !utils.curly_brackets_empty(cur_line_obj.text)) { //cursor is not in curly brackets            
+      editor.edit(builder => {
+        builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);  // move cursor down
       });
     } else {
       let else_def_pos_pair = _is_else_like(cur_line_obj.text, 'else');
@@ -248,7 +249,7 @@ function normal_enter() { // consider if is a function
     let first_char = utils.get_nonWhitespace_position(leftParenthesesLine);
     let blank_space = ' '.repeat(first_char);
     if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character) &&
-      !utils.not_in_curly_braces(cur_line_obj.text, cursor_position)) {
+      (!utils.not_in_curly_braces(cur_line_obj.text, cursor_position) && utils.curly_brackets_empty(cur_line_obj.text))) {
       editor.edit((builder) => {
         // vscode.window.showInformationMessage(String(left_bracket_pos));
         builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
@@ -298,6 +299,8 @@ function has_left_bracket(line) {
   }
   return [first_position, last_position, is_function];
 }
+
+
 
 
 // this method is called when your extension is deactivated

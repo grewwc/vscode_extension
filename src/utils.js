@@ -85,10 +85,9 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
   let looking_for_switch = test === 2 ? true : false;
 
   let first_char_pos = exports.get_nonWhitespace_position(cur_line_obj.text);
-  let space_should_remain = find_the_last_struct_line(looking_for_switch);
+  let space_should_remain = find_the_last_struct_line(looking_for_switch) + 2;
 
   // exports.print("here " + space_should_remain);
-
   let start_pos = new vscode.Position(cur_line_pos, space_should_remain);
   let end_pos = new vscode.Position(cur_line_pos, first_char_pos);
   let pos = new vscode.Position(cur_line_pos, cursor_pos);
@@ -97,12 +96,12 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
   if (first_char_pos >= space_should_remain) {
     editor.edit((builder) => {
       builder.delete(new vscode.Range(start_pos, end_pos));
-      builder.insert(pos, '\n' + ' '.repeat(space_should_remain + 4));
+      builder.insert(pos, '\n' + ' '.repeat(space_should_remain + 2));
     });
   } else {
     editor.edit((builder) => {
       builder.insert(new vscode.Position(cur_line_pos, 0), ' '.repeat(space_should_remain));
-      builder.insert(pos, '\n' + ' '.repeat(space_should_remain + 4));
+      builder.insert(pos, '\n' + ' '.repeat(space_should_remain + 2));
     });
   }
 

@@ -212,17 +212,17 @@ function normal_enter() { // consider if is a function
         else_def_pos_pair = _is_else_like(cur_line_obj.text, 'catch');
         else_def_pos = else_def_pos_pair[0];
       }
-      // utils.print("here " + else_def_pos);
       let has_right_bracket_before = else_def_pos_pair[1];
+      // utils.print("here " + else_def_pos + " " + has_right_bracket_before);
       let newPos = new vscode.Position(cur_line_index, last_left_bracket_pos + 1);
       // vscode.commands.executeCommand('editor.action.insertLineAfter');
       editor.edit((builder) => {
         // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
         // utils.print(String(char_pos) + " " + last_left_bracket_pos);
         if (else_def_pos !== -1) {
-          // utils.print(String(else_def_pos));
           if (has_right_bracket_before) {
-            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos));
+            // utils.print(String(else_def_pos) + " " + cur_line_index);
+            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos - 1));
           }
           builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
         }
@@ -231,7 +231,7 @@ function normal_enter() { // consider if is a function
         vscode.commands.executeCommand('cursorLineStart');
       })
         .then(() => {
-          let num_of_line_down = else_def_pos !== -1 ? -1 : -1;
+          let num_of_line_down = else_def_pos !== -1 ? 3 : -1;
           if (!has_right_bracket_before && else_def_pos !== -1) {
             num_of_line_down = -1;
           }

@@ -1,5 +1,6 @@
 'use strict';
 
+const { type } = require("os");
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
@@ -153,6 +154,7 @@ function normal_enter() { // consider if is a function
     let condition1 = line.indexOf(`${keyword} `);
     let condition2 = -1;
     let condition3 = -1;
+    let blank_space_between_else_and_left_bracket = -1;
     if (condition1 === -1) {
       condition2 = line.indexOf(`${keyword}{`);
     }
@@ -169,11 +171,12 @@ function normal_enter() { // consider if is a function
         found = true;
         break;
       }
+      blank_space_between_else_and_left_bracket++;
     }
     if (!found) {
-      return [else_pos, false];
+      return [else_pos, false, blank_space_between_else_and_left_bracket];
     } else {
-      return [i + 1, true];
+      return [i + 1, true, blank_space_between_else_and_left_bracket];
     }
   }
   let editor = vscode.window.activeTextEditor;
@@ -221,8 +224,12 @@ function normal_enter() { // consider if is a function
         // utils.print(String(char_pos) + " " + last_left_bracket_pos);
         if (else_def_pos !== -1) {
           if (has_right_bracket_before) {
-            // utils.print(String(else_def_pos) + " " + cur_line_index);
-            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(else_def_pos - 1));
+            const blank_space_between_else_and_left_bracket = else_def_pos_pair[2];
+            // utils.print(String(else_def_pos) + " " + blank_space_between_else_and_left_bracket);
+            let repeat_count = Math.max(0, else_def_pos - blank_space_between_else_and_left_bracket);
+            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(repeat_count));
+
+            // utils.print(" " + Object.keys(selection.active.line));
           }
           builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
         }

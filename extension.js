@@ -189,6 +189,7 @@ function normal_enter() { // consider if is a function
   let cur_line_obj = editor.document.lineAt(cur_line_index);
   let left_bracket_pos = has_left_bracket(cur_line_obj.text);
   let last_left_bracket_pos = left_bracket_pos[1];
+  const has_round_bracket = cur_line_obj.text.indexOf('(') !== -1 && cur_line_obj.text.indexOf(')') !== -1;
   let is_function = left_bracket_pos[2];
   let cursor_position = selection.start.character; //test if current cursor is in '{}'
   let first_char = utils.get_nonWhitespace_position(cur_line_obj.text)
@@ -241,6 +242,9 @@ function normal_enter() { // consider if is a function
           let num_of_line_down = else_def_pos !== -1 ? 3 : -1;
           if (!has_right_bracket_before && else_def_pos !== -1) {
             num_of_line_down = -1;
+          } else if (!has_round_bracket && else_def_pos === -1) {  // test if has round brackets 
+            num_of_line_down = 1;
+            // utils.print("here" + has_round_bracket + "  " + else_def_pos + " " + num_of_line_down);
           }
           editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
         });

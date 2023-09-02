@@ -7,6 +7,11 @@ const friend_class = /friend class/;
 const friend_struct = /friend struct/;
 const whiteCharacter = /s/;
 
+exports.print = function (text) {
+  vscode.window.showInformationMessage(text);
+}
+
+
 exports.is_last_char = function (line, cursor_pos) {
   for (let i = cursor_pos; i < line.length; ++i) {
     if (line[i] === " ") {
@@ -76,6 +81,19 @@ exports.get_nonWhitespace_position = function (line) {
   return pos;
 };
 
+const between_quotes = (line_content, keyword) => {
+  const first_quote_index = line_content.indexOf("\"");
+  if (first_quote_index < 0) {
+    return false;
+  }
+
+  const next_quote_index = line_content.indexOf("\"", first_quote_index + 1);
+  if (next_quote_index < 0) {
+    return false;
+  }
+  let result = line_content.substring(first_quote_index + 1, next_quote_index).includes(keyword);
+  return result;
+}
 
 exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_line_obj) {
   // const lang_support = ["cpp"];
@@ -137,9 +155,15 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
       let ith_line_obj = editor.document.lineAt(i).text;
       if ((struct.test(ith_line_obj) || class_.test(ith_line_obj))
         && !(friend_class.test(ith_line_obj) || friend_struct.test(ith_line_obj))) {
+        if (between_quotes(ith_line_obj, "struct ") || between_quotes(ith_line_obj, "class ")) {
+          continue;
+        }
         first_struct_char_pos = exports.get_nonWhitespace_position(ith_line_obj);
         break;
       } else if (looking_for_switch && switch_.test(ith_line_obj)) {
+        if (between_quotes(ith_line_obj, "switch ")) {
+          continue;
+        }
         first_struct_char_pos = exports.get_nonWhitespace_position(ith_line_obj);
         break;
       }
@@ -216,9 +240,6 @@ exports.isCatchBlock = (line) => {
 
 
 
-exports.print = function (text) {
-  vscode.window.showInformationMessage(text);
-}
 
 
 
@@ -232,4 +253,5 @@ exports.findLeftParenthesesLine = function (editor, lineNo) {
   return null;
 }
 
+exports.between_quotes = between_quotes;
 // exports.initial_enter = true;-

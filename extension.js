@@ -22,21 +22,23 @@ exports.activate = activate;
 
 
 class special_enter {
+  _is_keywaord_def(key_word) {
+    return utils.between_quotes(this.line_obj);
+  }
 
   _is_struct_def() {
-    // return this.line_obj.trim().startsWith("struct ");
-    return this.line_obj.includes("struct ");
+    return this._is_keywaord_def("struct ");
   }
   _is_class_def() {
-    return this.line_obj.includes("class ");
+    return this._is_keywaord_def("class ");
   }
 
   _is_union_def() {
-    return this.line_obj.includes("union ");
+    return this._is_keywaord_def("union ");
   }
 
   _is_enum_def() {
-    return this.line_obj.includes("enum ");
+    return this._is_keywaord_def("enum ");
   }
 
   _is_try_def(name = "try") {
@@ -102,7 +104,6 @@ class special_enter {
     if (this.condition_register([this._is_struct_def, this._is_class_def,
     this._is_enum_def, this._is_union_def, this._is_try_def, this._is_namespace_def, this._is_do_def,
     ])) {
-      // utils.print("here ");
       if (!utils.not_in_curly_braces(this.line_obj, this.cursor_position)) {
         let first_char = utils.get_nonWhitespace_position(this.line_obj);
         let blankspace = ' '.repeat(first_char);

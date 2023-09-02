@@ -2,7 +2,7 @@
     "name": "format-cpp",
     "displayName": "format_cpp",
     "description": "convenient typing",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "wwc129",
     "engines": {
         "vscode": "^1.22.0"

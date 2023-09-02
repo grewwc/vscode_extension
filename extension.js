@@ -22,13 +22,20 @@ exports.activate = activate;
 
 
 class special_enter {
-  _is_keywaord_def(key_word) {
-    return utils.between_quotes(this.line_obj);
+  _is_keywaord_def(keyword) {
+    const between_quotes = utils.between_quotes(this.line_obj, keyword);
+    const contains_keyword = this.line_obj.includes(keyword);
+    // bugs, fix later 
+    if (contains_keyword) {
+      return !between_quotes;
+    }
+    return false;
   }
 
   _is_struct_def() {
     return this._is_keywaord_def("struct ");
   }
+
   _is_class_def() {
     return this._is_keywaord_def("class ");
   }

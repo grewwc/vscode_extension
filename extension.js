@@ -263,12 +263,15 @@ function normal_enter() { // consider if is a function
   if (last_left_bracket_pos === -1 || is_function === 0) {
     normal_enter_not_function();
     // vscode.window.showInformationMessage(String(all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)));
-  } else if (is_function === 1) { // is a function 
+  } else if (is_function === 1 || is_function === 2) { // is a function 
     // utils.print("is_function");
     let leftParenthesesLine = utils.findLeftParenthesesLine(editor, cur_line_index);
     let blankspace = 0;
-    if (last_left_bracket_pos > 0 && leftParenthesesLine[last_left_bracket_pos - 1] !== ' ') {
+    if (last_left_bracket_pos > 0 && cur_line_obj.text[last_left_bracket_pos - 1] !== ' ') {
       blankspace = 1;
+    }
+    if (is_function === 1) {
+      first_char = utils.get_nonWhitespace_position(leftParenthesesLine);
     }
     let blank_space = ' '.repeat(first_char);
     if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character) &&
@@ -278,13 +281,17 @@ function normal_enter() { // consider if is a function
         const prev_right_bracket_index = utils.prev_right_bracket_index(cur_line_obj.text, cursor_position);
         const all_is_whitespace_until_cursor_position = utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, prev_right_bracket_index);
         if (!all_is_whitespace_until_cursor_position) {
-          builder.insert(new vscode.Position(cur_line_index, prev_right_bracket_index + 1), ' '.repeat(blankspace));
+          let space = 0;
+          if (cur_line_obj.text[prev_right_bracket_index + 1] !== ' ') {
+            space = 1;
+          }
+          builder.insert(new vscode.Position(cur_line_index, prev_right_bracket_index + 1), ' '.repeat(space));
         }
         builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), ' '.repeat(blankspace));
         builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
-        vscode.commands.executeCommand('cursorLineStart');
+        // vscode.commands.executeCommand('cursorLineStart');
       }).then(() => {
-        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 1);
+        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, -1);
       });
     } else {
       // vscode.commands.executeCommand('editor.action.insertLineAfter');
@@ -326,10 +333,13 @@ function has_left_bracket(line) {
   if (utils.isCatchBlock(line) || line.includes("else if")) {
     is_function = 0;
   }
-  if (line.includes("else ")
+  if ((line.includes("else ") || line.includes("else{"))
     || (line.includes("try ") || line.includes("try{"))
     || (line.includes("catch ") || line.includes("catch{"))) {
-    is_function = 1;
+    is_function = 2;
+  }
+  if (utils.is_catch_like(line)) {
+    is_function = 2;
   }
   return [first_position, last_position, is_function];
 }

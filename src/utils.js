@@ -6,6 +6,8 @@ const switch_ = /switch[ (]/;
 const friend_class = /friend class/;
 const friend_struct = /friend struct/;
 const whiteCharacter = /s/;
+const catch_keyword = /catch\(.*\)\s*{/;
+
 
 exports.print = function (text) {
   vscode.window.showInformationMessage(text);
@@ -34,6 +36,10 @@ exports.prev_right_bracket_index = function (line, cursor_pos) {
     cursor_pos--;
   }
   return cursor_pos;
+}
+
+exports.is_catch_like = function (line) {
+  return catch_keyword.test(line);
 }
 
 exports.not_in_curly_braces = function (line, cursor_position) {

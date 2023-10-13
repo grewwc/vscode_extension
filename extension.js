@@ -109,7 +109,7 @@ class special_enter {
     let left_bracket_pos = new vscode.Position(cur_line_index, left_bracket_index);
     let right_bracket_pos = new vscode.Position(cur_line_index, right_bracket_index + 1);
     if (this.condition_register([this._is_struct_def, this._is_class_def,
-    this._is_enum_def, this._is_union_def, this._is_try_def, this._is_namespace_def, this._is_do_def,
+    this._is_enum_def, this._is_union_def, this._is_namespace_def,
     ])) {
       if (!utils.not_in_curly_braces(this.line_obj, this.cursor_position)) {
         let first_char = utils.get_nonWhitespace_position(this.line_obj);
@@ -266,17 +266,25 @@ function normal_enter() { // consider if is a function
   } else if (is_function === 1) { // is a function 
     // utils.print("is_function");
     let leftParenthesesLine = utils.findLeftParenthesesLine(editor, cur_line_index);
-    let first_char = utils.get_nonWhitespace_position(leftParenthesesLine);
+    let blankspace = 0;
+    if (last_left_bracket_pos > 0 && leftParenthesesLine[last_left_bracket_pos - 1] !== ' ') {
+      blankspace = 1;
+    }
     let blank_space = ' '.repeat(first_char);
     if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character) &&
       (!utils.not_in_curly_braces(cur_line_obj.text, cursor_position) && utils.curly_brackets_empty(cur_line_obj.text))) {
       editor.edit((builder) => {
         // vscode.window.showInformationMessage(String(left_bracket_pos));
-        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
+        const prev_right_bracket_index = utils.prev_right_bracket_index(cur_line_obj.text, cursor_position);
+        const all_is_whitespace_until_cursor_position = utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, prev_right_bracket_index);
+        if (!all_is_whitespace_until_cursor_position) {
+          builder.insert(new vscode.Position(cur_line_index, prev_right_bracket_index + 1), ' '.repeat(blankspace));
+        }
+        builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), ' '.repeat(blankspace));
         builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos + 1), '\n' + '    ' + blank_space + '\n' + blank_space);
         vscode.commands.executeCommand('cursorLineStart');
       }).then(() => {
-        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 2);
+        editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, 1);
       });
     } else {
       // vscode.commands.executeCommand('editor.action.insertLineAfter');
@@ -317,6 +325,11 @@ function has_left_bracket(line) {
   // else if() block should not be treated like a function
   if (utils.isCatchBlock(line) || line.includes("else if")) {
     is_function = 0;
+  }
+  if (line.includes("else ")
+    || (line.includes("try ") || line.includes("try{"))
+    || (line.includes("catch ") || line.includes("catch{"))) {
+    is_function = 1;
   }
   return [first_position, last_position, is_function];
 }

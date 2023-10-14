@@ -115,6 +115,18 @@ const between_quotes = (line_content, keyword) => {
   return result;
 }
 
+exports.less_right_bracket = function (line) {
+  let cnt = 0;
+  for (const ch of line) {
+    if (ch === '{') {
+      cnt++;
+    } else if (ch === '}') {
+      cnt--;
+    }
+  }
+  return cnt > 0;
+}
+
 exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_line_obj) {
   // const lang_support = ["cpp"];
   let test = only_private_or_public();

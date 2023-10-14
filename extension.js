@@ -205,8 +205,7 @@ function normal_enter() { // consider if is a function
   function normal_enter_not_function() {
     // Any more format function should think about adding here.
     utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
-
-    utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
+    // utils.only_left_curly_bracket(editor, selection, cursor_position, cur_line_index, cur_line_obj);
 
     if (utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, cursor_position)) { //cursor is at the beginning of a sentence
       editor.edit((builder) => {
@@ -218,42 +217,15 @@ function normal_enter() { // consider if is a function
         builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);  // move cursor down
       });
     } else {
-      let else_def_pos_pair = _is_else_like(cur_line_obj.text, 'else');
-      let else_def_pos = else_def_pos_pair[0];
-      if (else_def_pos === -1) {
-        else_def_pos_pair = _is_else_like(cur_line_obj.text, 'catch');
-        else_def_pos = else_def_pos_pair[0];
-      }
-      let has_right_bracket_before = else_def_pos_pair[1];
-      // utils.print("here " + else_def_pos + " " + has_right_bracket_before);
       let newPos = new vscode.Position(cur_line_index, last_left_bracket_pos + 1);
       // vscode.commands.executeCommand('editor.action.insertLineAfter');
       editor.edit((builder) => {
-        // let char_pos = _is_else_def(cur_line_obj.text) ? last_left_bracket_pos : last_left_bracket_pos + 1;
-        // utils.print(String(char_pos) + " " + last_left_bracket_pos);
-        if (else_def_pos !== -1) {
-          if (has_right_bracket_before) {
-            const blank_space_between_else_and_left_bracket = else_def_pos_pair[2];
-            // utils.print(String(else_def_pos) + " " + blank_space_between_else_and_left_bracket);
-            let repeat_count = Math.max(0, else_def_pos - blank_space_between_else_and_left_bracket);
-            builder.insert(new vscode.Position(cur_line_index, else_def_pos + 1), '\n' + ' '.repeat(repeat_count));
-
-            // utils.print(" " + Object.keys(selection.active.line));
-          }
-          builder.insert(new vscode.Position(cur_line_index, last_left_bracket_pos), '\n' + blank_space);
-        }
         builder.insert(newPos, '\n' + blank_space + ' '.repeat(4));
         builder.insert(newPos, '\n' + blank_space);
-        vscode.commands.executeCommand('cursorLineStart');
+        // vscode.commands.executeCommand('cursorLineStart');
       })
         .then(() => {
-          let num_of_line_down = else_def_pos !== -1 ? 3 : -1;
-          if (!has_right_bracket_before && else_def_pos !== -1) {
-            num_of_line_down = -1;
-          } else if (!has_round_bracket && else_def_pos === -1) {  // test if has round brackets 
-            num_of_line_down = 1;
-            // utils.print("here" + has_round_bracket + "  " + else_def_pos + " " + num_of_line_down);
-          }
+          const num_of_line_down = -1;
           editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
         });
     }
@@ -274,8 +246,9 @@ function normal_enter() { // consider if is a function
       first_char = utils.get_nonWhitespace_position(leftParenthesesLine);
     }
     let blank_space = ' '.repeat(first_char);
-    if (!utils.is_last_char(cur_line_obj.text, editor.selection.active.character) &&
-      (!utils.not_in_curly_braces(cur_line_obj.text, cursor_position) && utils.curly_brackets_empty(cur_line_obj.text))) {
+    const in_curly_braces = !utils.not_in_curly_braces(cur_line_obj.text, cursor_position);
+    const curly_brackets_empty = utils.curly_brackets_empty(cur_line_obj.text);
+    if (in_curly_braces && curly_brackets_empty) {
       editor.edit((builder) => {
         // vscode.window.showInformationMessage(String(left_bracket_pos));
         const prev_right_bracket_index = utils.prev_right_bracket_index(cur_line_obj.text, cursor_position);
@@ -312,7 +285,7 @@ function has_left_bracket(line) {
   let last_position = -1;
   let first_position = -1;
   let is_function = 0;
-  let function_stack = ['}', ')'];
+  let function_stack = [')'];
   const line_length = line.length;
   for (let i = 0; i < line_length; ++i) {
     let temp = line[i];

@@ -5,8 +5,6 @@ const class_ = /class /;
 const switch_ = /switch[ (]/;
 const friend_class = /friend class/;
 const friend_struct = /friend struct/;
-const whiteCharacter = /s/;
-const catch_keyword = /catch\(.*\)\s*{/;
 
 
 exports.print = function (text) {
@@ -26,8 +24,13 @@ exports.is_last_char = function (line, cursor_pos) {
 };
 
 exports.curly_brackets_empty = function (line) {
-  const p = /\{\s*\}/g;
-  return p.test(line);
+  line = line.trim();
+  const empty_curly_brackets = /.*\{\s*\}/g;
+  const empty_curly_brackets_without_right = /.*\{\s*/g;
+  const res1 = empty_curly_brackets.test(line);
+  const res2 = empty_curly_brackets_without_right.test(line);
+  // exports.print(line + "  " + res1 + "  " + res2);
+  return res1 || res2;
 }
 
 exports.prev_right_bracket_index = function (line, cursor_pos) {
@@ -39,6 +42,7 @@ exports.prev_right_bracket_index = function (line, cursor_pos) {
 }
 
 exports.is_catch_like = function (line) {
+  const catch_keyword = /catch\(.*\)\s*{/;
   return catch_keyword.test(line);
 }
 
@@ -68,11 +72,13 @@ exports.not_in_curly_braces = function (line, cursor_position) {
       break;
     }
   }
+  has_right = true;
   return !(has_left && has_right);
 };
 
 
 exports.all_is_whitespace_until_cursor_position = function (line, position) {
+  const whiteCharacter = /s/;
   let result = true;
   for (let i = 0; i < position; ++i) {
     if (whiteCharacter.test(line[i]))

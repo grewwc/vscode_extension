@@ -33,9 +33,9 @@ exports.curly_brackets_empty = function (line) {
   return res1 || res2;
 }
 
-exports.prev_right_bracket_index = function (line, cursor_pos) {
+exports.prev_right_bracket_index = function (line, cursor_pos, ch = '}') {
   cursor_pos--;
-  while (cursor_pos > 0 && line[cursor_pos] != '}') {
+  while (cursor_pos > 0 && line[cursor_pos] !== ch) {
     cursor_pos--;
   }
   return cursor_pos;
@@ -72,7 +72,10 @@ exports.not_in_curly_braces = function (line, cursor_position) {
       break;
     }
   }
-  has_right = true;
+  line = line.trim();
+  if (line.length > 0 && line[line.length - 1] === '{') {
+    has_right = true;
+  }
   return !(has_left && has_right);
 };
 
@@ -115,16 +118,12 @@ const between_quotes = (line_content, keyword) => {
   return result;
 }
 
-exports.less_right_bracket = function (line) {
-  let cnt = 0;
-  for (const ch of line) {
-    if (ch === '{') {
-      cnt++;
-    } else if (ch === '}') {
-      cnt--;
-    }
+exports.ends_with_right_bracket = function (line) {
+  line = line.trim();
+  if (line.length === 0) {
+    return false;
   }
-  return cnt > 0;
+  return line[line.length - 1] === '{';
 }
 
 exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_line_obj) {

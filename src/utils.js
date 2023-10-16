@@ -26,19 +26,22 @@ exports.is_last_char = function (line, cursor_pos) {
 exports.curly_brackets_empty = function (line) {
   line = line.trim();
   const empty_curly_brackets = /.*\{\s*\}/g;
-  const empty_curly_brackets_without_right = /.*\{\s*/g;
-  const res1 = empty_curly_brackets.test(line);
-  const res2 = empty_curly_brackets_without_right.test(line);
-  // exports.print(line + "  " + res1 + "  " + res2);
-  return res1 || res2;
+  return empty_curly_brackets.test(line);
 }
 
+exports.only_left_curly_bracket = function (line) {
+  line = line.trim();
+  const empty_curly_brackets_without_right = /^.*\{\s*$/g;
+  return empty_curly_brackets_without_right.test(line);
+}
+
+
 exports.prev_right_bracket_index = function (line, cursor_pos, ch = '}') {
-  cursor_pos--;
-  while (cursor_pos > 0 && line[cursor_pos] !== ch) {
-    cursor_pos--;
+  if (cursor_pos <= 0) {
+    return -1;
   }
-  return cursor_pos;
+  line = line.substring(0, cursor_pos);
+  return line.lastIndexOf(ch);
 }
 
 exports.is_catch_like = function (line) {
@@ -204,24 +207,24 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
 
 }
 
-exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_line_pos, cur_line_obj) {
-  const line_content = cur_line_obj.text.substring(0, cursor_pos);
-  const left_bracket_index = line_content.indexOf('{');
-  const right_bracket_index = line_content.indexOf('}');
-  if (left_bracket_index === -1
-    || (left_bracket_index !== -1 && right_bracket_index !== -1)) {
-    return;
-  }
-  const sub_content = line_content.substring(0, Math.min(left_bracket_index, cursor_pos));
-  let number_of_begin_whitespace = 0;
-  while (number_of_begin_whitespace < sub_content.length && sub_content[number_of_begin_whitespace] === ' ') {
-    number_of_begin_whitespace++;
-  }
-  editor.edit((builder) => {
-    // vscode.window.showInformationMessage(String(cursor_pos));
-    builder.insert(new vscode.Position(cur_line_pos, cursor_pos), '\n' + ' '.repeat(number_of_begin_whitespace + 4));
-  });
-}
+// exports.only_left_curly_bracket = function (editor, selection, cursor_pos, cur_line_pos, cur_line_obj) {
+//   const line_content = cur_line_obj.text.substring(0, cursor_pos);
+//   const left_bracket_index = line_content.indexOf('{');
+//   const right_bracket_index = line_content.indexOf('}');
+//   if (left_bracket_index === -1
+//     || (left_bracket_index !== -1 && right_bracket_index !== -1)) {
+//     return;
+//   }
+//   const sub_content = line_content.substring(0, Math.min(left_bracket_index, cursor_pos));
+//   let number_of_begin_whitespace = 0;
+//   while (number_of_begin_whitespace < sub_content.length && sub_content[number_of_begin_whitespace] === ' ') {
+//     number_of_begin_whitespace++;
+//   }
+//   editor.edit((builder) => {
+//     // vscode.window.showInformationMessage(String(cursor_pos));
+//     builder.insert(new vscode.Position(cur_line_pos, cursor_pos), '\n' + ' '.repeat(number_of_begin_whitespace + 4));
+//   });
+// }
 
 
 exports.isCatchBlock = (line) => {

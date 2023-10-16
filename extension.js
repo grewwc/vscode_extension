@@ -202,6 +202,8 @@ function normal_enter() { // consider if is a function
   let cursor_position = selection.start.character; //test if current cursor is in '{}'
   let first_char = utils.get_nonWhitespace_position(cur_line_obj.text)
   let blank_space = ' '.repeat(first_char);
+  const curly_brackets_empty = utils.curly_brackets_empty(cur_line_obj.text);
+  const only_left_curly_bracket = utils.only_left_curly_bracket(cur_line_obj.text);
   function normal_enter_not_function() {
     // Any more format function should think about adding here.
     utils.private_public_align(editor, cursor_position, cur_line_index, cur_line_obj);
@@ -212,7 +214,7 @@ function normal_enter() { // consider if is a function
         builder.insert(new vscode.Position(cur_line_index, 0), '\n');  // move cursor down 
       });
     } else if (utils.not_in_curly_braces(cur_line_obj.text, cursor_position)
-      || !utils.curly_brackets_empty(cur_line_obj.text)) { //cursor is not in curly brackets            
+      || !(curly_brackets_empty || only_left_curly_bracket)) { //cursor is not in curly brackets            
       editor.edit(builder => {
         builder.insert(new vscode.Position(cur_line_index, cursor_position), '\n' + blank_space);  // move cursor down
       });
@@ -221,11 +223,16 @@ function normal_enter() { // consider if is a function
       // vscode.commands.executeCommand('editor.action.insertLineAfter');
       editor.edit((builder) => {
         builder.insert(newPos, '\n' + blank_space + ' '.repeat(4));
-        builder.insert(newPos, '\n' + blank_space);
+        if (!only_left_curly_bracket) {
+          builder.insert(newPos, '\n' + blank_space);
+        }
         // vscode.commands.executeCommand('cursorLineStart');
       })
         .then(() => {
-          const num_of_line_down = -1;
+          let num_of_line_down = -1;
+          if (only_left_curly_bracket) {
+            num_of_line_down = 0;
+          }
           editor.selection = moveSelectionDownNLine(editor.selection, 4 + first_char, num_of_line_down);
         });
     }
@@ -261,7 +268,7 @@ function normal_enter() { // consider if is a function
         // const all_is_whitespace_until_cursor_position = utils.all_is_whitespace_until_cursor_position(cur_line_obj.text, prev_right_bracket_index);
         if (1) {
           let bracket_space = 0;
-          if (cur_line_obj.text[prev_right_bracket_index + 1] !== ' ') {
+          if (prev_right_bracket_index >= 0 && cur_line_obj.text[prev_right_bracket_index + 1] !== ' ') {
             bracket_space = 1;
           }
           builder.insert(new vscode.Position(cur_line_index, prev_right_bracket_index + 1), ' '.repeat(bracket_space));
@@ -272,7 +279,7 @@ function normal_enter() { // consider if is a function
           let round_braces_space = 0;
           if (prev_left_round_braces_index >= 1 && cur_line_obj.text[prev_left_round_braces_index - 1] !== ' ') {
             if (cur_line_obj.text[prev_left_round_braces_index - 1] !== ']') {
-              round_braces_space = 1;
+              round_braces_space = 0;
             } else {
               is_lambda = true;
             }

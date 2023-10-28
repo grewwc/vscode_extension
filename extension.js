@@ -273,18 +273,18 @@ function normal_enter() { // consider if is a function
           }
           builder.insert(new vscode.Position(cur_line_index, prev_right_bracket_index + 1), ' '.repeat(bracket_space));
           bracket_space = 0;
-          if (reference_sign_index > 0) {
+          if (reference_sign_index > 0 && reference_sign_index < cur_line_obj.text.length && cur_line_obj.text[reference_sign_index + 1] !== ' ') {
             builder.insert(new vscode.Position(cur_line_index, reference_sign_index + 1), ' ');
           }
           let round_braces_space = 0;
           if (prev_left_round_braces_index >= 1 && cur_line_obj.text[prev_left_round_braces_index - 1] !== ' ') {
             if (cur_line_obj.text[prev_left_round_braces_index - 1] !== ']') {
               round_braces_space = 0;
+              builder.insert(new vscode.Position(cur_line_index, prev_left_round_braces_index), ' '.repeat(round_braces_space));
             } else {
               is_lambda = true;
             }
           }
-          builder.insert(new vscode.Position(cur_line_index, prev_left_round_braces_index), ' '.repeat(round_braces_space));
           round_braces_space = 0;
           if (is_lambda) {
             builder.insert(new vscode.Position(cur_line_index, cursor_position + 2), ';');

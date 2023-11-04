@@ -152,7 +152,7 @@ exports.private_public_align = function (editor, cursor_pos, cur_line_pos, cur_l
     });
   } else {
     editor.edit((builder) => {
-      builder.insert(new vscode.Position(cur_line_pos, 0), ' '.repeat(space_should_remain));
+      builder.insert(new vscode.Position(cur_line_pos, 0), ' '.repeat(space_should_remain - first_char_pos));
       builder.insert(pos, '\n' + ' '.repeat(space_should_remain + 2));
     });
   }

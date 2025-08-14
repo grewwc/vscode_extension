@@ -122,7 +122,7 @@ class special_enter {
             editor.edit((builder) => {
               builder.insert(left_bracket_pos, '\n' + blankspace);
               builder.insert(new vscode.Position(cur_line_index, left_bracket_index + 1), '\n' + '    ' + blankspace + '\n' + blankspace);
-              if (!this._is_try_def() && !this._is_namespace_def() && !this._is_do_def()) {
+              if (!this._is_try_def() && !this._is_namespace_def() && !this._is_do_def() && !this.line_obj.endsWith(';')) {
                 builder.insert(right_bracket_pos, ';');
               }
             })
@@ -287,7 +287,9 @@ function normal_enter() { // consider if is a function
           }
           round_braces_space = 0;
           if (is_lambda) {
-            builder.insert(new vscode.Position(cur_line_index, cursor_position + 2), ';');
+            if (!cur_line_obj.text.endsWith(';')) {
+              builder.insert(new vscode.Position(cur_line_index, cursor_position + 2), ';');
+            }
             // find equal_sign 
             const equalsign_idx = cur_line_obj.text.indexOf('=');
             if (equalsign_idx > 0) {
